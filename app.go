@@ -40,10 +40,36 @@ func paperlike(i int) {
     }
 }
 
+func setMultiLines(s string, l *widget.Label) {
+    if l!=nil {
+        ss := s[0:10]+"\n"+s[10:]
+        l.SetText(ss)
+    }
+}
+
+type winMesure struct {
+    widget.BaseWidget
+    winsize int
+    lab2update *widget.Label
+}
+func (t *winMesure) Resize(wins fyne.Size) {
+    t.winsize = wins.Width
+    setMultiLines("tétéjjjjjjôïkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkü", t.lab2update)
+}
+func NewWinMesure(labelWidget *widget.Label) *winMesure {
+    w := &winMesure{lab2update: labelWidget}
+    w.ExtendBaseWidget(w)
+    return w
+}
+
 func main() {
     app := app.New()
     w := app.NewWindow("GOLKi")
     glob := widget.NewVBox()
+
+    testlab := widget.NewLabel("")
+    glob.Append(NewWinMesure(testlab))
+    glob.Append(testlab)
 
     titleday := &widget.Label{Text: days[curday], Alignment: fyne.TextAlignCenter}
     decday := func(next bool) {
@@ -72,10 +98,20 @@ func main() {
     news.Append(news2)
     glob.Append(news)
 
-    paps := widget.NewGroupWithScroller("Papers")
-    for i:=0;i<npaps;i++ {
+    // scroller is not fluid enough
+    // paps := widget.NewGroupWithScroller("Papers")
+    paps := widget.NewGroup("Papers")
+    shownpaps := 2
+    for i:=0;i<shownpaps;i++ {
         j := i
-        lab := &widget.Label{Text: "paper "+strconv.Itoa(i), Alignment: fyne.TextAlignCenter}
+        var s string
+        if false && i<len(titles) {
+            s = titles[i]
+        } else {
+            s = "pap\ner "+strconv.Itoa(i)
+        }
+        // lab := &widget.Label{Text: s, Alignment: fyne.TextAlignCenter}
+        lab := &widget.Label{Text: s}
         blikes[i] = widget.NewButton("", func() {paperlike(j)})
         blikes[i].SetIcon(likesvg)
         isliked[i]=false
@@ -93,6 +129,7 @@ func main() {
     */
 
     w.SetContent(fyne.NewContainerWithLayout(layout.NewBorderLayout(glob,nil,nil,nil),glob,paps))
+    fmt.Printf("uinsize %v %v\n",w.Canvas().Size(),paps.Size())
     w.ShowAndRun()
 }
 
