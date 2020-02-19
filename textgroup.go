@@ -32,14 +32,14 @@ const padding = 2
 type TextGroup struct {
     widget.Group
     t0 int64
-    winw int
+    winw, winh, curpage, lineh int
     txts []string
     word2width map[string]int
     Appwin *fyne.Container
 }
 
 func NewTextGroup(tit string, txt []string) *TextGroup {
-    txtg := &TextGroup{t0:0,winw:100}
+    txtg := &TextGroup{t0:0, winw:100, winh:180, curpage:0, lineh:0}
     g := widget.NewGroup(tit)
     txtg.Group = *g
     txtg.ExtendBaseWidget(txtg)
@@ -50,7 +50,7 @@ func NewTextGroup(tit string, txt []string) *TextGroup {
 
 func calcLabels(t *TextGroup) {
     t.t0 = -t.t0
-    fmt.Printf("win fixed %d\n",t.winw)
+    fmt.Printf("win fixed %d %d\n",t.winw,t.winh)
     calcTxtSize(t)
     createLabels(t)
     // on android, we need to refresh the global app window after we change the layout
@@ -60,6 +60,7 @@ func calcLabels(t *TextGroup) {
 func (t *TextGroup) Resize(winsize fyne.Size) {
     if t.t0<0 {return}
     t.winw = winsize.Width
+    t.winh = winsize.Height
     if t.t0==0 {
         t.t0 = time.Now().Unix() // in sec
         go func() {
@@ -72,6 +73,7 @@ func (t *TextGroup) Resize(winsize fyne.Size) {
 
 func calcTxtSize(t *TextGroup) {
     fontsize := theme.TextSize()
+    var fullsize fyne.Size
     for i:=0;i<len(t.txts);i++ {
         ss := strings.Split(t.txts[i]," ")
         for j:=0;j<len(ss);j++ {
@@ -81,32 +83,36 @@ func calcTxtSize(t *TextGroup) {
                 tt := canvas.NewText(s,color.Black)
                 tt.TextSize = fontsize
                 tt.TextStyle = tt.TextStyle
-                fullsize := tt.MinSize()
+                fullsize = tt.MinSize()
                 t.word2width[s]=fullsize.Width
             }
         }
     }
-    for x,n := range t.word2width {
-        fmt.Printf("size %v %v\n",x,n)
-    }
+    t.lineh = fullsize.Height
     if false {
+        for x,n := range t.word2width {
+            fmt.Printf("size %v %v\n",x,n)
+        }
         // utilise cela pour estimer la taille d'un espace = 3 pixels
         s := "même pas"
         tt := canvas.NewText(s,color.Black)
         tt.TextSize = fontsize
         tt.TextStyle = tt.TextStyle
-        fullsize := tt.MinSize()
+        fullsize = tt.MinSize()
         fmt.Printf("même pas %v\n",fullsize.Width)
     }
 }
 
 func createLabels(t *TextGroup) {
     wmax := int(0.95*float32(t.winw))
-    for i:=0;i<len(t.txts);i++ {
+    hmax := int(0.95*float32(t.winh))
+    posendlab := 0
+    for i:=t.curpage;i<len(t.txts);i++ {
         var w2w = make([]int,10)
         sfin := ""
         ss := strings.Split(t.txts[i]," ")
         cum:=padding
+        nlines := 1
         for j:=0;j<len(ss);j++ {
             s := strings.TrimSuffix(ss[j],"\n")
             sl := t.word2width[s]
@@ -115,11 +121,21 @@ func createLabels(t *TextGroup) {
             cum += 3
             if cum>=wmax {
                 sfin += "\n"
+                nlines++
                 cum=padding+sl+3
             }
             sfin += s+" "
         }
 
+        // estimate the height of this piece of text
+        posendlab += t.lineh * nlines
+        posendlab += t.lineh // interline
+        fmt.Printf("posendlab %v %v\n",posendlab,t.winh)
+        if posendlab>=hmax {
+            t.curpage = i
+            fmt.Println("cut at: "+t.txts[i])
+            break
+        }
         lab := widget.NewLabel(sfin)
         t.Append(lab)
     }
