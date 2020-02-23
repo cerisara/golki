@@ -116,12 +116,16 @@ func main() {
     tg.Appwin = content
 
     /*
+    li := canvas.NewLine(color.Black)
+    content.AddObject(li)
+
     go func() {
-        time.Sleep(3*time.Second)
-        content.Refresh()
-        // w.SetContent(content)
+        time.Sleep(4*time.Second)
+        for i:=0;i<len(content.Objects);i++ {
+            fmt.Printf("object %d %T %v %v\n",i,content.Objects[i],content.Objects[i],content.Objects[i].Position())
+        }
     }()
-*/
+    */
 
     w.ShowAndRun()
 }

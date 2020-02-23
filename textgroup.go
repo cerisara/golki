@@ -7,6 +7,7 @@ import (
     "image/color"
     "fyne.io/fyne"
     "fyne.io/fyne/canvas"
+    "fyne.io/fyne/layout"
     "fyne.io/fyne/theme"
     "fyne.io/fyne/widget"
 )
@@ -29,6 +30,24 @@ const padding = 2
    Limitations: this widget does not support changing orientation, or changing the window size dynamically for now.
 */
 
+type Bord struct {
+   canvas.Line
+   w int
+}
+
+func NewBord(wh int) *Bord {
+    b := &Bord{}
+    b.Line = *canvas.NewLine(color.Black)
+    b.w=wh
+    b.Position1 = fyne.NewPos(0,0)
+    b.Position2 = fyne.NewPos(wh,0)
+    return b
+}
+
+func (b *Bord)MinSize() fyne.Size {
+    return fyne.NewSize(b.w,3)
+}
+
 type TextGroup struct {
     widget.Group
     t0 int64
@@ -36,6 +55,7 @@ type TextGroup struct {
     txts []string
     word2width map[string]int
     Appwin *fyne.Container
+    LabObj []*widget.Label
 }
 
 func NewTextGroup(tit string, txt []string) *TextGroup {
@@ -107,6 +127,7 @@ func createLabels(t *TextGroup) {
     wmax := int(0.95*float32(t.winw))
     hmax := int(0.95*float32(t.winh))
     posendlab := 0
+    t.LabObj = make([]*widget.Label,0)
     for i:=t.curpage;i<len(t.txts);i++ {
         var w2w = make([]int,10)
         sfin := ""
@@ -137,8 +158,39 @@ func createLabels(t *TextGroup) {
             break
         }
         lab := widget.NewLabel(sfin)
-        t.Append(lab)
+        t.LabObj = append(t.LabObj,lab)
+        l := NewBord(t.winh)
+        // l := canvas.NewLine(color.Black)
+        // l.Position1 = fyne.NewPos(0,0)
+        // l.Position2 = fyne.NewPos(t.winh,10)
+        clab := fyne.NewContainerWithLayout(layout.NewBorderLayout(nil,nil,nil,nil),l)
+        t.Append(clab)
     }
+
+    go func() {
+        time.Sleep(time.Second)
+        // draw lines to separate labels
+        /*
+        var lab *widget.Label
+        var lines [5]*canvas.Line
+        for i:=0;i<len(t.LabObj);i++ {
+            lines[i] = canvas.NewLine(color.Black)
+            // quand on addobject, il recalcule toutes les positions precedentes !
+            t.Appwin.AddObject(lines[i])
+        }
+        for i:=0;i<len(t.LabObj);i++ {
+            lab = t.LabObj[i]
+            j := lab.Position().Y
+            lines[i].Position1 = fyne.NewPos(0,j)
+            lines[i].Position2 = fyne.NewPos(t.winh,j)
+            fmt.Printf("zzz %v %v \n",lines[i].Position1,lines[i].Position2)
+        }
+        for i:=0;i<len(t.LabObj);i++ {
+            fmt.Printf("yyy %v %v \n",lines[i].Position1,lines[i].Position2)
+        }
+        */
+    }()
+    
 }
 
 
