@@ -79,7 +79,7 @@ func main() {
     txts = append(txts,"Ceci est un très long texte, enfin il devrait l'être en tout cas, même si je ne sais pas bien à partir de quelle longueur on pourra considérer qu'il est assez long")
     txts = append(txts,"Et encore un texte")
     txts = append(txts,"yet anothe one et cette fois il était en français")
-    tg := NewTextGroup("",txts)
+    tg := NewTextGroup(txts)
 
     /*
     paps := widget.NewGroup("Papers")
@@ -113,7 +113,7 @@ func main() {
 
     content := fyne.NewContainerWithLayout(layout.NewBorderLayout(glob,nil,nil,nil),glob,tg)
     w.SetContent(content)
-    tg.Appwin = content
+    // tg.Appwin = content
 
     /*
     li := canvas.NewLine(color.Black)

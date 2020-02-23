@@ -2,132 +2,97 @@ package main
 
 import (
     "fmt"
-    "time"
     "strings"
     "image/color"
     "fyne.io/fyne"
     "fyne.io/fyne/canvas"
-    "fyne.io/fyne/layout"
     "fyne.io/fyne/theme"
     "fyne.io/fyne/widget"
 )
 
 const padding = 2
 
-/*
-   This file proposes a new "TextGroup" widget that allows to stack several texts into a stream of messages,
-   where each message is automatically wrapped according to the available width.
-   The messages are presented one after the other, until the available height is filled.
-   Then, a button to show the next (or previous) page of messages is shown.
-   I have chosen this "static" display of a list of messages instead of the more common scrolling stream,
-   because the first tests I have done with a scrolling list implement with fyne.io were not smooth enough.
-
-   Implementation details:
-   - First, a WidthProgressBar is placed on top of the group and waits for 1 second to be sure that the display is stable;
-     this widget then computes the available width, and computes the wrapping of all texts statically.
-   - The widget then generates the labels with the computed wrapping and manages the prev/next buttons
-
-   Limitations: this widget does not support changing orientation, or changing the window size dynamically for now.
-*/
-
-type Bord struct {
-   canvas.Line
-   w int
-}
-
-func NewBord(wh int) *Bord {
-    b := &Bord{}
-    b.Line = *canvas.NewLine(color.Black)
-    b.w=wh
-    b.Position1 = fyne.NewPos(0,0)
-    b.Position2 = fyne.NewPos(wh,0)
-    return b
-}
-
-func (b *Bord)MinSize() fyne.Size {
-    return fyne.NewSize(b.w,3)
-}
-
 type TextGroup struct {
-    widget.Group
-    t0 int64
-    winw, winh, curpage, lineh int
+    widget.BaseWidget
     txts []string
     word2width map[string]int
-    Appwin *fyne.Container
-    LabObj []*widget.Label
+    lineh int
+    curpage int
 }
 
-func NewTextGroup(tit string, txt []string) *TextGroup {
-    txtg := &TextGroup{t0:0, winw:100, winh:180, curpage:0, lineh:0}
-    g := widget.NewGroup(tit)
-    txtg.Group = *g
-    txtg.ExtendBaseWidget(txtg)
-    txtg.txts = txt
-    txtg.word2width = make(map[string]int)
-    return txtg
+func (b *TextGroup) Tapped(*fyne.PointEvent) {
+    // TODO
+}
+func (b *TextGroup) TappedSecondary(*fyne.PointEvent) {
 }
 
-func calcLabels(t *TextGroup) {
-    t.t0 = -t.t0
-    fmt.Printf("win fixed %d %d\n",t.winw,t.winh)
-    calcTxtSize(t)
-    createLabels(t)
+func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
+        var objects []fyne.CanvasObject
+        return &textGroupRenderer{objects, b}
+}
+
+func NewTextGroup(txt []string) *TextGroup{
+        tg := &TextGroup{txts: txt}
+        tg.ExtendBaseWidget(tg)
+        tg.word2width = make(map[string]int)
+        tg.curpage = 0
+        return tg
+}
+
+// ========
+
+type textGroupRenderer struct {
+        objects []fyne.CanvasObject
+        tg  *TextGroup
+}
+
+func (b *textGroupRenderer) MinSize() fyne.Size {
+        baseSize := fyne.NewSize(100,150)
+        // b.label.MinSize()
+        baseSize = baseSize.Add(fyne.NewSize(24, 24))
+        return baseSize.Add(fyne.NewSize(theme.Padding()*4, theme.Padding()*2))
+}
+
+func (b *textGroupRenderer) Layout(size fyne.Size) {
+        inner := size.Subtract(fyne.NewSize(theme.Padding()*4, theme.Padding()*2))
+        inner = inner.Subtract(fyne.NewSize(24, 24))
+        b.recalcText(inner)
+}
+
+func (b *textGroupRenderer) ApplyTheme() {
+        b.Refresh()
+}
+
+func (b *textGroupRenderer) BackgroundColor() color.Color {
+        return theme.ButtonColor()
+}
+
+func (b *textGroupRenderer) Refresh() {
+        b.Layout(b.tg.Size())
+        canvas.Refresh(b.tg)
+}
+
+func (b *textGroupRenderer) Objects() []fyne.CanvasObject {
+        return b.objects
+}
+
+func (b *textGroupRenderer) Destroy() {
+}
+
+func (b *textGroupRenderer) recalcText(size fyne.Size) {
+    calcTxtSize(b.tg)
+    b.createLabels(b.tg,size)
     // on android, we need to refresh the global app window after we change the layout
-    if t.Appwin != nil {t.Appwin.Refresh()}
+    // if t.Appwin != nil {t.Appwin.Refresh()}
 }
 
-func (t *TextGroup) Resize(winsize fyne.Size) {
-    if t.t0<0 {return}
-    t.winw = winsize.Width
-    t.winh = winsize.Height
-    if t.t0==0 {
-        t.t0 = time.Now().Unix() // in sec
-        go func() {
-            time.Sleep(time.Second)
-            // now we assume the display is stable
-            calcLabels(t)
-        }()
-    }
-}
+// ==================
 
-func calcTxtSize(t *TextGroup) {
-    fontsize := theme.TextSize()
-    var fullsize fyne.Size
-    for i:=0;i<len(t.txts);i++ {
-        ss := strings.Split(t.txts[i]," ")
-        for j:=0;j<len(ss);j++ {
-            s := strings.TrimSuffix(ss[j],"\n")
-            _, ok := t.word2width[s]
-            if !ok {
-                tt := canvas.NewText(s,color.Black)
-                tt.TextSize = fontsize
-                tt.TextStyle = tt.TextStyle
-                fullsize = tt.MinSize()
-                t.word2width[s]=fullsize.Width
-            }
-        }
-    }
-    t.lineh = fullsize.Height
-    if false {
-        for x,n := range t.word2width {
-            fmt.Printf("size %v %v\n",x,n)
-        }
-        // utilise cela pour estimer la taille d'un espace = 3 pixels
-        s := "même pas"
-        tt := canvas.NewText(s,color.Black)
-        tt.TextSize = fontsize
-        tt.TextStyle = tt.TextStyle
-        fullsize = tt.MinSize()
-        fmt.Printf("même pas %v\n",fullsize.Width)
-    }
-}
-
-func createLabels(t *TextGroup) {
-    wmax := int(0.95*float32(t.winw))
-    hmax := int(0.95*float32(t.winh))
+func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
+    wmax := int(0.95*float32(size.Width))
+    hmax := int(0.95*float32(size.Height))
+    b.objects = b.objects[:0]
     posendlab := 0
-    t.LabObj = make([]*widget.Label,0)
     for i:=t.curpage;i<len(t.txts);i++ {
         var w2w = make([]int,10)
         sfin := ""
@@ -149,49 +114,52 @@ func createLabels(t *TextGroup) {
         }
 
         // estimate the height of this piece of text
+        prevpos := posendlab
         posendlab += t.lineh * nlines
         posendlab += t.lineh // interline
-        fmt.Printf("posendlab %v %v\n",posendlab,t.winh)
         if posendlab>=hmax {
-            t.curpage = i
-            fmt.Println("cut at: "+t.txts[i])
+            // t.curpage = i
             break
         }
-        lab := widget.NewLabel(sfin)
-        t.LabObj = append(t.LabObj,lab)
-        l := NewBord(t.winh)
-        // l := canvas.NewLine(color.Black)
-        // l.Position1 = fyne.NewPos(0,0)
-        // l.Position2 = fyne.NewPos(t.winh,10)
-        clab := fyne.NewContainerWithLayout(layout.NewBorderLayout(nil,nil,nil,nil),l)
-        t.Append(clab)
+        newlab := widget.NewLabel(sfin)
+        b.objects = append(b.objects,newlab)
+        newlab.Move(fyne.NewPos(0,prevpos))
+        // fmt.Printf("move label %d %d\n",i,prevpos)
     }
-
-    go func() {
-        time.Sleep(time.Second)
-        // draw lines to separate labels
-        /*
-        var lab *widget.Label
-        var lines [5]*canvas.Line
-        for i:=0;i<len(t.LabObj);i++ {
-            lines[i] = canvas.NewLine(color.Black)
-            // quand on addobject, il recalcule toutes les positions precedentes !
-            t.Appwin.AddObject(lines[i])
-        }
-        for i:=0;i<len(t.LabObj);i++ {
-            lab = t.LabObj[i]
-            j := lab.Position().Y
-            lines[i].Position1 = fyne.NewPos(0,j)
-            lines[i].Position2 = fyne.NewPos(t.winh,j)
-            fmt.Printf("zzz %v %v \n",lines[i].Position1,lines[i].Position2)
-        }
-        for i:=0;i<len(t.LabObj);i++ {
-            fmt.Printf("yyy %v %v \n",lines[i].Position1,lines[i].Position2)
-        }
-        */
-    }()
-    
 }
+
+func calcTxtSize(t *TextGroup) {
+    fontsize := theme.TextSize()
+    var fullsize fyne.Size
+    for i:=0;i<len(t.txts);i++ {
+        ss := strings.Split(t.txts[i]," ")
+        for j:=0;j<len(ss);j++ {
+            s := strings.TrimSuffix(ss[j],"\n")
+            _, ok := t.word2width[s]
+            if !ok {
+                tt := canvas.NewText(s,color.Black)
+                tt.TextSize = fontsize
+                tt.TextStyle = tt.TextStyle
+                fullsize = tt.MinSize()
+                t.word2width[s]=fullsize.Width
+                if fullsize.Height > t.lineh { t.lineh = fullsize.Height }
+            }
+        }
+    }
+    if false {
+        for x,n := range t.word2width {
+            fmt.Printf("size %v %v\n",x,n)
+        }
+        // utilise cela pour estimer la taille d'un espace = 3 pixels
+        s := "même pas"
+        tt := canvas.NewText(s,color.Black)
+        tt.TextSize = fontsize
+        tt.TextStyle = tt.TextStyle
+        fullsize = tt.MinSize()
+        fmt.Printf("même pas %v\n",fullsize.Width)
+    }
+}
+
 
 
 
