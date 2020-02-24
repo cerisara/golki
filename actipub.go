@@ -1,9 +1,12 @@
 package main
 
 import (
+    "fmt"
+    "bufio"
         "net/http"
         "io/ioutil"
         "encoding/json"
+        "golang.org/x/mobile/asset"
 )
 
 func getAPNote(url string) string {
@@ -16,8 +19,24 @@ func getAPNote(url string) string {
 }
 
 func aptest() []string {
+    fmt.Println("detson in aptest")
     var ss []string
+    f, err := asset.Open("url.txt")
+    fmt.Printf("detson %v %v\n",f, err)
+    if err != nil {
+        fmt.Println("detson cannot open url.txt")
+        return ss
+    }
+    fmt.Println("detson f ok")
+    defer f.Close()
     u := "https://bctpub.duckdns.org/polson/outbox?page=1"
+    scanner := bufio.NewScanner(f)
+    for scanner.Scan() {
+        // only keep the last url
+        u = scanner.Text()
+    }
+    fmt.Println("detson url: "+u)
+
     s := getAPNote(u)
     var jsonobj map[string]interface{}
     json.Unmarshal([]byte(s), &jsonobj)

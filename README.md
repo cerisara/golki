@@ -1,3 +1,10 @@
+BUG
+
+il y a un bug dans fyne, qui utilise vendor/mobile/x
+or utiliser ce vendor cree 2 references differentes au context android (l'autre avec golang/...) et a cause de cela,
+on ne peut pas utiliser le package asset pour acceder a des resources dans le apk:
+cf. https://github.com/golang/go/issues/26445
+la solution est de ne pas vendoriser mobile/x/ mais est-ce que alors mes fix marcheront toujours ?
 
 TODO:
 

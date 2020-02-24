@@ -43,6 +43,7 @@ func NewTapLab(s string,j int) *TapLab {
 }
 
 func settings(tg *TextGroup) {
+    fmt.Println("detson go to settings")
     s := aptest()
     tg.reset(s)
     tg.Refresh()
