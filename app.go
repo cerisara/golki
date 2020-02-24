@@ -76,8 +76,8 @@ func main() {
 
     var txts = []string{}
     txts = append(txts,"Ceci est un petit texte")
-    txts = append(txts,"Ceci est un très long texte, enfin il devrait l'être en tout cas, même si je ne sais pas bien à partir de quelle longueur on pourra considérer qu'il est assez long")
     txts = append(txts,"Et encore un texte")
+    txts = append(txts,"Ceci est un très long texte, enfin il devrait l'être en tout cas, même si je ne sais pas bien à partir de quelle longueur on pourra considérer qu'il est assez long")
     txts = append(txts,"yet anothe one et cette fois il était en français")
     tg := NewTextGroup(txts)
 

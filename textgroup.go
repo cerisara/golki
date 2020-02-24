@@ -11,6 +11,8 @@ import (
 )
 
 const padding = 2
+const interline = 10
+const spacew = 2
 
 type TextGroup struct {
     widget.BaseWidget
@@ -90,11 +92,10 @@ func (b *textGroupRenderer) recalcText(size fyne.Size) {
 
 func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
     wmax := int(0.95*float32(size.Width))
-    hmax := int(0.95*float32(size.Height))
+    hmax := int(0.99*float32(size.Height))
     b.objects = b.objects[:0]
     posendlab := 0
     for i:=t.curpage;i<len(t.txts);i++ {
-        var w2w = make([]int,10)
         sfin := ""
         ss := strings.Split(t.txts[i]," ")
         cum:=padding
@@ -102,10 +103,8 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
         for j:=0;j<len(ss);j++ {
             s := strings.TrimSuffix(ss[j],"\n")
             sl := t.word2width[s]
-            w2w = append(w2w,sl)
-            cum += sl
-            cum += 3
-            if cum>=wmax {
+            cum += sl+spacew
+            if cum>wmax {
                 sfin += "\n"
                 nlines++
                 cum=padding+sl+3
@@ -116,15 +115,15 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
         // estimate the height of this piece of text
         prevpos := posendlab
         posendlab += t.lineh * nlines
-        posendlab += t.lineh // interline
-        if posendlab>=hmax {
+        posendlab += interline
+        if posendlab>hmax {
             // t.curpage = i
             break
         }
         newlab := widget.NewLabel(sfin)
         b.objects = append(b.objects,newlab)
+        fmt.Printf("prevpos %d %d\n",i,prevpos)
         newlab.Move(fyne.NewPos(0,prevpos))
-        // fmt.Printf("move label %d %d\n",i,prevpos)
     }
 }
 
