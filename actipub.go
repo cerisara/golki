@@ -2,7 +2,6 @@ package main
 
 import (
         "net/http"
-        "fmt"
         "io/ioutil"
         "encoding/json"
 )
@@ -16,7 +15,8 @@ func getAPNote(url string) string {
     return string(body)
 }
 
-func aptest() {
+func aptest() []string {
+    var ss []string
     u := "https://bctpub.duckdns.org/polson/outbox?page=1"
     s := getAPNote(u)
     var jsonobj map[string]interface{}
@@ -25,7 +25,8 @@ func aptest() {
     for _,x := range z {
         y := x.(map[string]interface{})
         u := y["object"].(map[string]interface{})
-        fmt.Println(u["content"])
+        ss=append(ss, u["content"].(string))
     }
+    return ss
 }
 

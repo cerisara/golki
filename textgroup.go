@@ -42,8 +42,10 @@ func NewTapLab(s string,j int) *TapLab {
     return l
 }
 
-func settings() {
-    aptest()
+func settings(tg *TextGroup) {
+    s := aptest()
+    tg.reset(s)
+    tg.Refresh()
 }
 
 func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
@@ -61,7 +63,7 @@ func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
             b.Refresh()
         })
         bsettings := widget.NewButtonWithIcon("",theme.MenuIcon(),func () {
-            settings()
+            settings(b)
         })
         pnbuttons := widget.NewHBox(bprev,layout.NewSpacer(),bsettings,layout.NewSpacer(),bnext)
         buth = pnbuttons.MinSize().Height
@@ -70,6 +72,14 @@ func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
         objects = append(objects,whole)
         r := &textGroupRenderer{objects, labelsBox, whole, b}
         return r
+}
+
+func (tg *TextGroup) reset(s []string) {
+        tg.txts = s
+        tg.ExtendBaseWidget(tg)
+        tg.word2width = make(map[string]int)
+        tg.curpage = 0
+        tg.pageidx =[]int{0}
 }
 
 func NewTextGroup(txt []string) *TextGroup{
