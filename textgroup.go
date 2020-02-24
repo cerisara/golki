@@ -5,6 +5,7 @@ import (
     "strings"
     "image/color"
     "fyne.io/fyne"
+    "fyne.io/fyne/layout"
     "fyne.io/fyne/canvas"
     "fyne.io/fyne/theme"
     "fyne.io/fyne/widget"
@@ -94,6 +95,7 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
     wmax := int(0.95*float32(size.Width))
     hmax := int(0.99*float32(size.Height))
     b.objects = b.objects[:0]
+    var labels []fyne.CanvasObject
     posendlab := 0
     for i:=t.curpage;i<len(t.txts);i++ {
         sfin := ""
@@ -113,7 +115,6 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
         }
 
         // estimate the height of this piece of text
-        prevpos := posendlab
         posendlab += t.lineh * nlines
         posendlab += interline
         if posendlab>hmax {
@@ -121,10 +122,11 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
             break
         }
         newlab := widget.NewLabel(sfin)
-        b.objects = append(b.objects,newlab)
-        fmt.Printf("prevpos %d %d\n",i,prevpos)
-        newlab.Move(fyne.NewPos(0,prevpos))
+        labels = append(labels,newlab)
     }
+    gridcont := fyne.NewContainerWithLayout(layout.NewVBoxLayout())
+    for _,l := range labels {gridcont.AddObject(l)}
+    b.objects = append(b.objects,gridcont)
 }
 
 func calcTxtSize(t *TextGroup) {
