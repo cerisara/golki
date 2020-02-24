@@ -42,6 +42,10 @@ func NewTapLab(s string,j int) *TapLab {
     return l
 }
 
+func settings() {
+    aptest()
+}
+
 func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
         var objects []fyne.CanvasObject
         labelsBox := widget.NewVBox()
@@ -56,7 +60,10 @@ func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
             if b.curpage>=len(b.pageidx) {b.curpage--}
             b.Refresh()
         })
-        pnbuttons := widget.NewHBox(bprev,layout.NewSpacer(),bnext)
+        bsettings := widget.NewButtonWithIcon("",theme.MenuIcon(),func () {
+            settings()
+        })
+        pnbuttons := widget.NewHBox(bprev,layout.NewSpacer(),bsettings,layout.NewSpacer(),bnext)
         buth = pnbuttons.MinSize().Height
 
         whole := fyne.NewContainerWithLayout(layout.NewBorderLayout(nil,pnbuttons,nil,nil),labelsBox,pnbuttons)
