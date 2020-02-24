@@ -22,6 +22,7 @@ type TextGroup struct {
     word2width map[string]int
     lineh int
     curpage int
+    pageidx []int
 }
 
 func (b *TextGroup) Tapped(*fyne.PointEvent) {
@@ -35,10 +36,14 @@ func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
         labelsBox := widget.NewVBox()
 
         bprev := widget.NewButtonWithIcon("",theme.MoveUpIcon(),func () {
-            fmt.Println("prev")
+            b.curpage--
+            if b.curpage<0 {b.curpage=0}
+            b.Refresh()
         })
         bnext := widget.NewButtonWithIcon("",theme.MoveDownIcon(),func () {
-            fmt.Println("next")
+            b.curpage++
+            if b.curpage>=len(b.pageidx) {b.curpage--}
+            b.Refresh()
         })
         pnbuttons := widget.NewHBox(bprev,layout.NewSpacer(),bnext)
         buth = pnbuttons.MinSize().Height
@@ -54,6 +59,7 @@ func NewTextGroup(txt []string) *TextGroup{
         tg.ExtendBaseWidget(tg)
         tg.word2width = make(map[string]int)
         tg.curpage = 0
+        tg.pageidx =[]int{0}
         return tg
 }
 
@@ -101,8 +107,6 @@ func (b *textGroupRenderer) Destroy() {
 func (b *textGroupRenderer) recalcText(size fyne.Size) {
     calcTxtSize(b.tg)
     b.createLabels(b.tg,size)
-    // on android, we need to refresh the global app window after we change the layout
-    // if t.Appwin != nil {t.Appwin.Refresh()}
 }
 
 // ==================
@@ -112,7 +116,7 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
     hmax := int(0.99*float32(size.Height))-buth
     b.labelsBox.Children = b.labelsBox.Children[:0]
     posendlab := 0
-    for i:=t.curpage;i<len(t.txts);i++ {
+    for i:=t.pageidx[t.curpage];i<len(t.txts);i++ {
         sfin := ""
         ss := strings.Split(t.txts[i]," ")
         cum:=padding
@@ -132,8 +136,9 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
         // estimate the height of this piece of text
         posendlab += t.lineh * nlines
         posendlab += interline
-        if posendlab>=hmax {
-            // t.curpage = i
+        if posendlab>=hmax && i>t.pageidx[t.curpage] {
+            t.pageidx = t.pageidx[:t.curpage+1]
+            t.pageidx = append(t.pageidx,i)
             break
         }
         newlab := widget.NewLabel(sfin)
@@ -174,96 +179,3 @@ func calcTxtSize(t *TextGroup) {
     }
 }
 
-
-
-
-
-
-
-
-/*
-
-Old stuff
-I keep them just for the records
-
-// label normal mais qui ne fixe pas de mindwidth
-// warning: ce reactLabel ne se mets pas a jour lorsqu'on change son texte avec SetText !!?
-type reactLabel struct {
-    widget.Label
-    text0 string
-    OnTapped func()
-}
-
-func (b *reactLabel) Tapped(*fyne.PointEvent) {
-    b.OnTapped()
-}
-func (b *reactLabel) TappedSecondary(*fyne.PointEvent) {
-}
-
-func NewReactLabel(txt string) *reactLabel {
-    label := &reactLabel{OnTapped: func() {fmt.Println("TAPPED")}}
-    label.ExtendBaseWidget(label)
-    label.text0 = txt
-    label.SetText("") // on le mettra a jour lors du premier call a Resize
-    return label
-}
-// juste pour qu'on puisse reduire la taille lors du test et pour qu'il ne cree par une fenetre en se basant sur la taille de ce texte
-func (l *reactLabel) MinSize() fyne.Size {
-    return fyne.NewSize(50,50)
-}
-
-/////////////////////////////////////////////////////////
-type winMeasurer struct {
-    widget.Label
-    winw int
-    Labels2wrap []*widget.Label
-    txt0 []string
-}
-func (_ *winMeasurer) MinSize() fyne.Size {
-    return fyne.NewSize(0,1)
-}
-func NewWinMeasurer() *winMeasurer {
-    w := &winMeasurer{}
-    w.ExtendBaseWidget(w)
-    w.SetText("")
-    return w
-}
-func (w *winMeasurer) AddLabel2wrap(l *widget.Label, s string) {
-    w.Labels2wrap = append(w.Labels2wrap,l)
-    w.txt0 = append(w.txt0,s)
-}
-func (t *winMeasurer) Resize(winsize fyne.Size) {
-    t.winw = winsize.Width
-    for i:=0;i<len(t.Labels2wrap);i++ {
-        ll := t.Labels2wrap[i]
-        s := t.txt0[i]
-        var ss string
-        if t.winw < 600 {
-            ss = s[:10]+"\n"+s[10:]
-        } else {
-            ss = s
-        }
-        // fmt.Printf("winsize %v %s\n",t.winw,s)
-        ll.SetText(ss)
-    }
-
-    // estimate the size of the full text
-    tt := canvas.NewText(t.alltxt, color.Black)
-    fontsize := theme.TextSize()
-    tt.TextSize = fontsize
-    tt.TextStyle = t.TextStyle
-    fullsize := tt.MinSize()
-    if fullsize.Width>=winsize.Width {
-        // need to wrap
-        s := t.Text
-        szPerLetter := float64(fullsize.Width)/float64(len(s))
-        nletPerLine := int32(float64(winsize.Width)*0.8 / float64(szPerLetter))
-        ss := s[:nletPerLine]+"\n"+s[nletPerLine:]
-        fmt.Printf("cutline %v %v %s\n",nletPerLine,len(s),ss)
-        t.SetText(ss)
-        t.Refresh()
-    }
-    // fullsize := textMinSize(t.alltxt,,t.textStyle())
-}
-
-*/
