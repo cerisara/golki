@@ -14,6 +14,7 @@ import (
 const padding = 2
 const interline = 10
 const spacew = 2
+var buth int = 0
 
 type TextGroup struct {
     widget.BaseWidget
@@ -31,7 +32,21 @@ func (b *TextGroup) TappedSecondary(*fyne.PointEvent) {
 
 func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
         var objects []fyne.CanvasObject
-        return &textGroupRenderer{objects, b}
+        labelsBox := widget.NewVBox()
+
+        bprev := widget.NewButtonWithIcon("",theme.MoveUpIcon(),func () {
+            fmt.Println("prev")
+        })
+        bnext := widget.NewButtonWithIcon("",theme.MoveDownIcon(),func () {
+            fmt.Println("next")
+        })
+        pnbuttons := widget.NewHBox(bprev,layout.NewSpacer(),bnext)
+        buth = pnbuttons.MinSize().Height
+
+        whole := fyne.NewContainerWithLayout(layout.NewBorderLayout(nil,pnbuttons,nil,nil),labelsBox,pnbuttons)
+        objects = append(objects,whole)
+        r := &textGroupRenderer{objects, labelsBox, whole, b}
+        return r
 }
 
 func NewTextGroup(txt []string) *TextGroup{
@@ -46,20 +61,21 @@ func NewTextGroup(txt []string) *TextGroup{
 
 type textGroupRenderer struct {
         objects []fyne.CanvasObject
+        labelsBox *widget.Box
+        whole *fyne.Container
         tg  *TextGroup
 }
 
 func (b *textGroupRenderer) MinSize() fyne.Size {
-        baseSize := fyne.NewSize(100,150)
+        baseSize := fyne.NewSize(150,200)
         // b.label.MinSize()
         baseSize = baseSize.Add(fyne.NewSize(24, 24))
         return baseSize.Add(fyne.NewSize(theme.Padding()*4, theme.Padding()*2))
 }
 
 func (b *textGroupRenderer) Layout(size fyne.Size) {
-        inner := size.Subtract(fyne.NewSize(theme.Padding()*4, theme.Padding()*2))
-        inner = inner.Subtract(fyne.NewSize(24, 24))
-        b.recalcText(inner)
+        b.whole.Resize(size)
+        b.recalcText(size)
 }
 
 func (b *textGroupRenderer) ApplyTheme() {
@@ -92,10 +108,9 @@ func (b *textGroupRenderer) recalcText(size fyne.Size) {
 // ==================
 
 func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
-    wmax := int(0.95*float32(size.Width))
-    hmax := int(0.99*float32(size.Height))
-    b.objects = b.objects[:0]
-    var labels []fyne.CanvasObject
+    wmax := int(0.99*float32(size.Width))
+    hmax := int(0.99*float32(size.Height))-buth
+    b.labelsBox.Children = b.labelsBox.Children[:0]
     posendlab := 0
     for i:=t.curpage;i<len(t.txts);i++ {
         sfin := ""
@@ -117,16 +132,14 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
         // estimate the height of this piece of text
         posendlab += t.lineh * nlines
         posendlab += interline
-        if posendlab>hmax {
+        if posendlab>=hmax {
             // t.curpage = i
             break
         }
         newlab := widget.NewLabel(sfin)
-        labels = append(labels,newlab)
+        b.labelsBox.Append(newlab)
     }
-    gridcont := fyne.NewContainerWithLayout(layout.NewVBoxLayout())
-    for _,l := range labels {gridcont.AddObject(l)}
-    b.objects = append(b.objects,gridcont)
+    // b.labelsBox.Refresh()
 }
 
 func calcTxtSize(t *TextGroup) {
