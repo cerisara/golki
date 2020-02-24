@@ -25,10 +25,21 @@ type TextGroup struct {
     pageidx []int
 }
 
-func (b *TextGroup) Tapped(*fyne.PointEvent) {
+type TapLab struct {
+    widget.Label
+    i int
+}
+
+func (b *TapLab) Tapped(*fyne.PointEvent) {
+    fmt.Printf("tapped %d\n",b.i)
     // TODO
 }
-func (b *TextGroup) TappedSecondary(*fyne.PointEvent) {
+func (b *TapLab) TappedSecondary(*fyne.PointEvent) {
+}
+func NewTapLab(s string,j int) *TapLab {
+    l := &TapLab{widget.Label{Text:s},j}
+    l.ExtendBaseWidget(l)
+    return l
 }
 
 func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
@@ -141,7 +152,7 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
             t.pageidx = append(t.pageidx,i)
             break
         }
-        newlab := widget.NewLabel(sfin)
+        newlab := NewTapLab(sfin,i)
         b.labelsBox.Append(newlab)
     }
     // b.labelsBox.Refresh()
