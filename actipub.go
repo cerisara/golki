@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "html"
+    "strconv"
     "time"
     "github.com/grokify/html-strip-tags-go"
     "strings"
@@ -24,7 +25,7 @@ func getAPJson(url string) string {
     if err != nil {
         fmt.Println("Error reading request. ", err)
     }
-    req.Header.Set("Accept", "application/json")
+    req.Header.Set("Accept", "application/activity+json")
     client := &http.Client{Timeout: time.Second * 10}
     resp, err := client.Do(req)
     if err != nil {
@@ -101,9 +102,13 @@ func parseToots(s string) *APtoots {
         if b=="" {break}
         stmp := strings.Split(b,"/")
         b = stmp[len(stmp)-1]
+        aa,err := strconv.Unquote("\""+a+"\"")
+        a = aa
+        /*
         a = strings.Replace(a,"\\u003c","<",-1)
         a = strings.Replace(a,"\\u003e",">",-1)
         a = strings.Replace(a,"\\u0026","&",-1)
+        */
         a = strip.StripTags(a)
         a = html.UnescapeString(a)
         // do not handle retoots
@@ -168,6 +173,8 @@ func aptest() []string {
     u = "https://olki-social.loria.fr/@rigelk"
     u = "https://olki-social.loria.fr/federation/actor/rigelk"
     u = "https://olki-social.loria.fr/federation/actor/rigelk/outbox?page=1"
+
+    u = "https://olki-social.loria.fr/note/8O0uWuPp1UXUEUwu"
 
     fmt.Println("detson url: "+u)
 
