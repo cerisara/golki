@@ -164,6 +164,10 @@ func aptest() []string {
     u = "https://mastodon.etalab.gouv.fr/@cerisara"
     // u = "https://mastodon.etalab.gouv.fr/@cerisara/103514562679577450"
     u = "https://mastodon.etalab.gouv.fr/users/cerisara/outbox?page=true"
+    // cette URL ne marche pas: il faut chercher les "alternate" qui sont en json:
+    u = "https://olki-social.loria.fr/@rigelk"
+    u = "https://olki-social.loria.fr/federation/actor/rigelk"
+    u = "https://olki-social.loria.fr/federation/actor/rigelk/outbox?page=1"
 
     fmt.Println("detson url: "+u)
 
