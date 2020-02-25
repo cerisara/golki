@@ -2,12 +2,21 @@ package main
 
 import (
     "fmt"
+    "html"
     "time"
+    "github.com/grokify/html-strip-tags-go"
     "strings"
         "net/http"
         "io/ioutil"
         //"encoding/json"
 )
+
+func Max(x, y int) int {
+    if x < y {
+        return y
+    }
+    return x
+}
 
 func getAPJson(url string) string {
 
@@ -37,48 +46,82 @@ func NewAPobject(t int) *APobject {
     o := &APobject{t,nil,nil,nil}
     return o
 }
-func (o *APobject) String() string {
+func (o *APobject) Strings() []string {
     switch o.Typ {
-    case 0: return o.User.String()
-    case 1: return ""
-    case 2: return ""
-default: return ""
+    case 0: return o.User.Strings()
+    case 1: return o.Toots.Strings()
+    case 2: return nil
+default: return nil
     }
 }
 
-func getJsonVal(s string, k string) string {
+func getJsonVal(s string, k string) (string, int) {
     i := strings.Index(s, "\""+k+"\"")
-    if i<0 {return ""}
+    if i<0 {return "",0}
     j := strings.Index(s[i:],":")
-    if j<0 {return ""}
+    if j<0 {return "",0}
     a := strings.Index(s[i+j:],"\"")
-    if a<0 {return ""}
+    if a<0 {return "",0}
     a++
     b := strings.Index(s[i+j+a:],"\"")
-    if b<0 {return ""}
-    return s[i+j+a:i+j+a+b]
+    if b<0 {return "",0}
+    return s[i+j+a:i+j+a+b], i+j+a+b
 }
 
 type APuser struct {
     outbox string
     name string
 }
-func (o *APuser) String() string {
-    return "User "+o.name
+func (o *APuser) Strings() []string {
+    var r = []string{"User "+o.name}
+    return r
 }
 func parseUser(s string) *APuser {
-    outbox := getJsonVal(s, "outbox")
-    name := getJsonVal(s, "name")
+    outbox,_ := getJsonVal(s, "outbox")
+    name,_ := getJsonVal(s, "name")
     if outbox != "" && name != "" {
+        fmt.Println("outbox "+outbox)
         return &APuser{outbox,name}
     }
     return nil
 }
 
 type APtoots struct {
+    from []string
+    txt  []string
 }
 func parseToots(s string) *APtoots {
-    return nil
+    x := s
+    var froms []string
+    var txts []string
+    for ;; {
+        a,i := getJsonVal(x, "content")
+        if a=="" {break}
+        b,j := getJsonVal(x, "attributedTo")
+        if b=="" {break}
+        stmp := strings.Split(b,"/")
+        b = stmp[len(stmp)-1]
+        a = strings.Replace(a,"\\u003c","<",-1)
+        a = strings.Replace(a,"\\u003e",">",-1)
+        a = strings.Replace(a,"\\u0026","&",-1)
+        a = strip.StripTags(a)
+        a = html.UnescapeString(a)
+        // do not handle retoots
+        if a!="" {
+            froms = append(froms,b)
+            txts = append(txts,a)
+        }
+        k := Max(i,j)
+        x = x[k:]
+    }
+    return &APtoots{froms,txts}
+}
+func (o *APtoots) Strings() []string {
+    var s []string
+    for i:=0;i<len(o.from);i++ {
+        s = append(s,o.from[i]+": "+o.txt[i])
+    }
+    return s
 }
 
 type APoutbox struct {
@@ -117,13 +160,18 @@ func aptest() []string {
     fmt.Println("detson in aptest")
     var ss []string
     u := "https://bctpub.duckdns.org/polson/outbox?page=1"
-    u = "https://bctpub.duckdns.org/polson"
+    // u = "https://bctpub.duckdns.org/polson"
     u = "https://mastodon.etalab.gouv.fr/@cerisara"
+    // u = "https://mastodon.etalab.gouv.fr/@cerisara/103514562679577450"
+    u = "https://mastodon.etalab.gouv.fr/users/cerisara/outbox?page=true"
+
     fmt.Println("detson url: "+u)
 
     s := getAPJson(u)
     x := parseAPjson(s)
-    if x != nil {ss = append(ss,x.String())}
+    if x != nil {
+        ss = x.Strings()
+    }
 
     /*
     ** maniere exacte de parser le json
