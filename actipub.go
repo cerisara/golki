@@ -102,7 +102,7 @@ func parseToots(s string) *APtoots {
         if b=="" {break}
         stmp := strings.Split(b,"/")
         b = stmp[len(stmp)-1]
-        aa,err := strconv.Unquote("\""+a+"\"")
+        aa,_ := strconv.Unquote("\""+a+"\"")
         a = aa
         /*
         a = strings.Replace(a,"\\u003c","<",-1)
@@ -168,13 +168,12 @@ func aptest() []string {
     // u = "https://bctpub.duckdns.org/polson"
     u = "https://mastodon.etalab.gouv.fr/@cerisara"
     // u = "https://mastodon.etalab.gouv.fr/@cerisara/103514562679577450"
-    u = "https://mastodon.etalab.gouv.fr/users/cerisara/outbox?page=true"
-    // cette URL ne marche pas: il faut chercher les "alternate" qui sont en json:
+    // cette URL ne marche pas: il faut chercher les "alternate" qui sont en json: ou se trouve la outbox dans olki ?
     u = "https://olki-social.loria.fr/@rigelk"
     u = "https://olki-social.loria.fr/federation/actor/rigelk"
     u = "https://olki-social.loria.fr/federation/actor/rigelk/outbox?page=1"
-
     u = "https://olki-social.loria.fr/note/8O0uWuPp1UXUEUwu"
+    u = "https://mastodon.etalab.gouv.fr/users/cerisara/outbox?page=true"
 
     fmt.Println("detson url: "+u)
 

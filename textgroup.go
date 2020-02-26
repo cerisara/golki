@@ -27,7 +27,37 @@ type TextGroup struct {
 
 type TapLab struct {
     widget.Label
+    self widget.Label
     i int
+}
+
+type tapLabRenderer struct {
+        taplab  *TapLab
+        labrenderer fyne.WidgetRenderer
+}
+func (b *TapLab) CreateRenderer() fyne.WidgetRenderer {
+    lr := b.self.CreateRenderer()
+    r := &tapLabRenderer{b,lr}
+    return r
+}
+func (b *tapLabRenderer) Objects() []fyne.CanvasObject {
+        return b.labrenderer.Objects()
+}
+func (b *tapLabRenderer) MinSize() fyne.Size {
+        return b.labrenderer.MinSize()
+}
+func (b *tapLabRenderer) Layout(size fyne.Size) {
+        b.labrenderer.Layout(size)
+}
+func (b *tapLabRenderer) BackgroundColor() color.Color {
+        return theme.ButtonColor()
+        // return color.RGBA{R: 0xff, G: 0x01, B: 0x01, A: 0xff}
+}
+func (b *tapLabRenderer) Refresh() {
+        b.labrenderer.Refresh()
+}
+func (b *tapLabRenderer) Destroy() {
+        b.labrenderer.Destroy()
 }
 
 func (b *TapLab) Tapped(*fyne.PointEvent) {
@@ -37,10 +67,17 @@ func (b *TapLab) Tapped(*fyne.PointEvent) {
 func (b *TapLab) TappedSecondary(*fyne.PointEvent) {
 }
 func NewTapLab(s string,j int) *TapLab {
-    l := &TapLab{widget.Label{Text:s},j}
+    l := &TapLab{}
+    ll := widget.NewLabel(s)
+    l.Label = *ll
+    l.i = j
+    l.self = *ll
+    // l := &TapLab{widget.Label{Text:s},j}
     l.ExtendBaseWidget(l)
     return l
 }
+
+// --------------------------------------------------------------------------------
 
 func settings(tg *TextGroup) {
     fmt.Println("detson go to settings")

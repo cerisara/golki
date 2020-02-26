@@ -1,3 +1,34 @@
+TODO:
+
+Fonctionnalités:
+
+1- client OLKi/Masto/Writeas: afficher/naviguer/rédiger commentaires
+2- client TALN: agenda, news, abstracts, commentaires, likes
+3- authentification par un mot de passe prédéfini (simple, supporté seulement par mon Writeas)
+
+Fcts techniques:
+
+- Naviguer dans une outbox (est-ce suffisant, ou faut-il gérer les timelines ?)
+
+Ergonomie:
+
+- Comment naviguer entre les outbox ? bookmarks, liens, search
+
+GUI:
+
+- séparer les posts
+- réduire/ajuster font size
+- afficher les premières lignes d'un post en bas
+- ajouter icône pour les URL
+- entrer mot de passe pour poster des commentaires dans le fedi via mon writeas
+
+Authentification:
+
+Le but est de rendre l'appli la plus simple possible, donc pas de registration/login:
+je crée un serveur relai Writeas avec une liste de mots de passe prédéfinis, un par user,
+et je distribute les mots de passe par email.
+Ca ne scale pas pour distributer l'appli à grande échelle, mais ça suffit pour une distribution ciblée.
+
 BUG
 
 il y a un bug dans fyne, qui utilise vendor/mobile/x
@@ -6,13 +37,4 @@ on ne peut pas utiliser le package asset pour acceder a des resources dans le ap
 cf. https://github.com/golang/go/issues/26445
 la solution est de ne pas vendoriser mobile/x/ mais est-ce que alors mes fix marcheront toujours ?
 
-TODO:
 
-- on lui donne dans un fichier/res l'URL d'une outbox: comment y acceder depuis un res dans APK ?
-- il la charge pour recuperer le "last" URL
-- il download an arriere-plan a l'init tous les posts, et en garde une copie locale
-- il faut ensuite gerer les downloads des nouveaux posts seulement, toujours en partant du "last"
-- il faut afficher la date et l'auteur pour chaque post
-- lorsque l'appli est relancee, il faut afficher a partir du dernier post lu
-
-- faire entrer un code au user pour qu'il puisse ensuite se connecter grace au code et pouvoir pusher un message sur l'AP server
