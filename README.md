@@ -16,9 +16,9 @@ Ergonomie:
 
 GUI:
 
-- séparer les posts
+X séparer les posts
 - réduire/ajuster font size
-- afficher les premières lignes d'un post en bas
+- afficher les premières lignes d'un post en bas: pas necessaire, car on affiche au minimum un post, et si on clic dessus, on le fera apparaitre en entier; mais il faudra ajouter un scrollbar !!
 - ajouter icône pour les URL
 - entrer mot de passe pour poster des commentaires dans le fedi via mon writeas
 
