@@ -23,21 +23,37 @@ type TextGroup struct {
     lineh int
     curpage int
     pageidx []int
+    menufct MenuFct
 }
 
 type TapLab struct {
     widget.Label
     self widget.Label
+    // je pourrais avoir besoin d'un textProvider pour changer la fontsize, mais je prefere laisser pour le moment
+    // txtprov *textProvider
     i int
+    tg *TextGroup
 }
 
 type tapLabRenderer struct {
         taplab  *TapLab
         labrenderer fyne.WidgetRenderer
+        // objects []fyne.CanvasObject
 }
 func (b *TapLab) CreateRenderer() fyne.WidgetRenderer {
+    // lr est un textRenderer: je le garde sous la main pour pouvoir réutiliser ses capacités
     lr := b.self.CreateRenderer()
+    /*
+    canvastexts := lr.texts
+    for ct := range canvastexts {
+        ct.TextSize = 8
+    }
+    */
+    // mais je crée mon propre renderer pour changer la couleur et text fontsize
     r := &tapLabRenderer{b,lr}
+    // text := canvas.NewText(b.Text, theme.TextColor())
+    // text.TextStyle.Bold = true
+    // objects := []fyne.CanvasObject{ text }
     return r
 }
 func (b *tapLabRenderer) Objects() []fyne.CanvasObject {
@@ -62,7 +78,7 @@ func (b *tapLabRenderer) Destroy() {
 
 func (b *TapLab) Tapped(*fyne.PointEvent) {
     fmt.Printf("tapped %d\n",b.i)
-    // TODO
+    b.tg.menufct(b.i)
 }
 func (b *TapLab) TappedSecondary(*fyne.PointEvent) {
 }
@@ -79,13 +95,6 @@ func NewTapLab(s string,j int) *TapLab {
 
 // --------------------------------------------------------------------------------
 
-func settings(tg *TextGroup) {
-    fmt.Println("detson go to settings")
-    s := aptest()
-    tg.reset(s)
-    tg.Refresh()
-}
-
 func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
         var objects []fyne.CanvasObject
         labelsBox := widget.NewVBox()
@@ -101,7 +110,7 @@ func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
             b.Refresh()
         })
         bsettings := widget.NewButtonWithIcon("",theme.MenuIcon(),func () {
-            settings(b)
+            b.menufct(-1)
         })
         pnbuttons := widget.NewHBox(bprev,layout.NewSpacer(),bsettings,layout.NewSpacer(),bnext)
         buth = pnbuttons.MinSize().Height
@@ -112,21 +121,24 @@ func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
         return r
 }
 
-func (tg *TextGroup) reset(s []string) {
-        tg.txts = s
-        tg.ExtendBaseWidget(tg)
-        tg.word2width = make(map[string]int)
-        tg.curpage = 0
-        tg.pageidx =[]int{0}
+func (tg *TextGroup) SetTexts(s []string) {
+    tg.txts = s
+    tg.ExtendBaseWidget(tg)
+    tg.word2width = make(map[string]int)
+    tg.curpage = 0
+    tg.pageidx =[]int{0}
+    tg.Refresh()
 }
 
-func NewTextGroup(txt []string) *TextGroup{
-        tg := &TextGroup{txts: txt}
-        tg.ExtendBaseWidget(tg)
-        tg.word2width = make(map[string]int)
-        tg.curpage = 0
-        tg.pageidx =[]int{0}
-        return tg
+type MenuFct func(int)
+
+func NewTextGroup(txt []string, mf MenuFct) *TextGroup{
+    tg := &TextGroup{txts: txt, menufct: mf}
+    tg.ExtendBaseWidget(tg)
+    tg.word2width = make(map[string]int)
+    tg.curpage = 0
+    tg.pageidx =[]int{0}
+    return tg
 }
 
 // ========
@@ -208,6 +220,7 @@ func (b *textGroupRenderer) createLabels(t *TextGroup, size fyne.Size) {
             break
         }
         newlab := NewTapLab(sfin,i)
+        newlab.tg = b.tg
         b.labelsBox.Append(newlab)
     }
     // b.labelsBox.Refresh()

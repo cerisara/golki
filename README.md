@@ -10,6 +10,11 @@ Fcts techniques:
 
 - Naviguer dans une outbox (est-ce suffisant, ou faut-il gérer les timelines ?)
 
+Naviguer dans outbox:
+
+- charger la suite de la liste à la demande
+- sauver tout ce qui est chargé dans fichier pour mode offline
+
 Ergonomie:
 
 - Comment naviguer entre les outbox ? bookmarks, liens, search

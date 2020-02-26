@@ -15,7 +15,7 @@ var blikes [npaps]*widget.Button
 var isliked [npaps]bool
 var days = [...]string {"Lundi","Mardi","Mercredi","Jeudi","Vendredi"}
 var curday = 0
-
+var tg *TextGroup
 
 func paperchat(i int) {
   fmt.Printf("paper %d\n",i)
@@ -35,6 +35,24 @@ func paperlike(i int) {
     } else {
         blikes[i].SetIcon(likeredsvg)
         isliked[i]=true
+    }
+}
+
+func menufct(bclicked int) {
+    var users = []string {
+        "cerisara@etalab",
+        "rigel@olki-social",
+    }
+    var urls = []string {
+        "https://mastodon.etalab.gouv.fr/users/cerisara/outbox?page=true",
+        "https://olki-social.loria.fr/federation/actor/rigelk/outbox?page=1",
+    }
+
+    if bclicked == -1 {
+        tg.SetTexts(users)
+    } else {
+        posts := GetPosts(urls[bclicked])
+        tg.SetTexts(posts)
     }
 }
 
@@ -64,22 +82,19 @@ func main() {
     glob.Append(titlebar)
 
 
-    news := widget.NewGroup("News")
-    news1 := &widget.Label{Text: "news 1", Alignment: fyne.TextAlignCenter}
+    news := widget.NewGroup("Fediverse")
+    news1 := &widget.Label{Text: "Read mode", Alignment: fyne.TextAlignCenter}
     news.Append(news1)
-    news2 := &widget.Label{Text: "news 2", Alignment: fyne.TextAlignCenter}
-    news.Append(news2)
+    // news2 := &widget.Label{Text: "news 2", Alignment: fyne.TextAlignCenter}
+    // news.Append(news2)
     glob.Append(news)
 
     // scroller is not fluid enough
     // paps := widget.NewGroupWithScroller("Papers")
 
     var txts = []string{}
-    txts = append(txts,"Ceci est un petit texte")
-    txts = append(txts,"Et encore un texte")
-    txts = append(txts,"Ceci est un très long texte, enfin il devrait l'être en tout cas, même si je ne sais pas bien à partir de quelle longueur on pourra considérer qu'il est assez long")
-    txts = append(txts,"yet anothe one et cette fois il était en français")
-    tg := NewTextGroup(txts)
+    txts = append(txts,"Click on menu button bellow to choose a User thread")
+    tg = NewTextGroup(txts, menufct)
 
     /*
     paps := widget.NewGroup("Papers")

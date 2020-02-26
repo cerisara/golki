@@ -161,9 +161,9 @@ func parseAPjson(s string) *APobject {
     return nil
 }
 
-func aptest() []string {
-    fmt.Println("detson in aptest")
+func GetPosts(u string) []string {
     var ss []string
+    /*
     u := "https://bctpub.duckdns.org/polson/outbox?page=1"
     // u = "https://bctpub.duckdns.org/polson"
     u = "https://mastodon.etalab.gouv.fr/@cerisara"
@@ -174,8 +174,7 @@ func aptest() []string {
     u = "https://olki-social.loria.fr/federation/actor/rigelk/outbox?page=1"
     u = "https://olki-social.loria.fr/note/8O0uWuPp1UXUEUwu"
     u = "https://mastodon.etalab.gouv.fr/users/cerisara/outbox?page=true"
-
-    fmt.Println("detson url: "+u)
+*/
 
     s := getAPJson(u)
     x := parseAPjson(s)
