@@ -56,6 +56,29 @@ default: return nil
     }
 }
 
+func debugJson(s string) {
+    fmt.Println(s)
+    /*
+    var jsonobj map[string]interface{}
+    json.Unmarshal([]byte(s), &jsonobj)
+
+    z := jsonobj["orderedItems"].([]interface{})
+    for _,x := range z {
+        y := x.(map[string]interface{})
+        u := y["object"].(map[string]interface{})
+        msg := u["content"].(string)
+        // date := u["published"].(string)
+        // layout := "2006-01-02T15:04:05.000Z"
+        // date,_ = time.Parse(layout,date)
+        from := u["attributedTo"].(string)
+        stmp := strings.Split(from,"/")
+        from = stmp[len(stmp)-1]
+        oneline := from+": "+msg
+        ss=append(ss, oneline)
+    }
+    */
+}
+
 func getJsonVal(s string, k string) (string, int) {
     i := strings.Index(s, "\""+k+"\"")
     if i<0 {return "",0}
@@ -96,6 +119,7 @@ func parseToots(s string) *APtoots {
     var froms []string
     var txts []string
     for ;; {
+        debugJson(x)
         a,i := getJsonVal(x, "content")
         if a=="" {break}
         b,j := getJsonVal(x, "attributedTo")
@@ -104,11 +128,6 @@ func parseToots(s string) *APtoots {
         b = stmp[len(stmp)-1]
         aa,_ := strconv.Unquote("\""+a+"\"")
         a = aa
-        /*
-        a = strings.Replace(a,"\\u003c","<",-1)
-        a = strings.Replace(a,"\\u003e",">",-1)
-        a = strings.Replace(a,"\\u0026","&",-1)
-        */
         a = strip.StripTags(a)
         a = html.UnescapeString(a)
         // do not handle retoots
@@ -163,18 +182,6 @@ func parseAPjson(s string) *APobject {
 
 func GetPosts(u string) []string {
     var ss []string
-    /*
-    u := "https://bctpub.duckdns.org/polson/outbox?page=1"
-    // u = "https://bctpub.duckdns.org/polson"
-    u = "https://mastodon.etalab.gouv.fr/@cerisara"
-    // u = "https://mastodon.etalab.gouv.fr/@cerisara/103514562679577450"
-    // cette URL ne marche pas: il faut chercher les "alternate" qui sont en json: ou se trouve la outbox dans olki ?
-    u = "https://olki-social.loria.fr/@rigelk"
-    u = "https://olki-social.loria.fr/federation/actor/rigelk"
-    u = "https://olki-social.loria.fr/federation/actor/rigelk/outbox?page=1"
-    u = "https://olki-social.loria.fr/note/8O0uWuPp1UXUEUwu"
-    u = "https://mastodon.etalab.gouv.fr/users/cerisara/outbox?page=true"
-*/
 
     s := getAPJson(u)
     x := parseAPjson(s)
@@ -182,27 +189,6 @@ func GetPosts(u string) []string {
         ss = x.Strings()
     }
 
-    /*
-    ** maniere exacte de parser le json
-
-    var jsonobj map[string]interface{}
-    json.Unmarshal([]byte(s), &jsonobj)
-
-    z := jsonobj["orderedItems"].([]interface{})
-    for _,x := range z {
-        y := x.(map[string]interface{})
-        u := y["object"].(map[string]interface{})
-        msg := u["content"].(string)
-        // date := u["published"].(string)
-        // layout := "2006-01-02T15:04:05.000Z"
-        // date,_ = time.Parse(layout,date)
-        from := u["attributedTo"].(string)
-        stmp := strings.Split(from,"/")
-        from = stmp[len(stmp)-1]
-        oneline := from+": "+msg
-        ss=append(ss, oneline)
-    }
-    */
     return ss
 }
 
