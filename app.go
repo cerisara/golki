@@ -44,7 +44,7 @@ func menufct(bclicked int) {
         "rigel@olki-social",
     }
     var urls = []string {
-        "https://mastodon.etalab.gouv.fr/users/cerisara/outbox?page=true",
+        "https://mastodon.etalab.gouv.fr/users/cerisara/outbox",
         "https://olki-social.loria.fr/federation/actor/rigelk/outbox?page=1",
     }
 

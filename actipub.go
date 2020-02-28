@@ -41,10 +41,9 @@ type APobject struct {
     Typ int // 0: user, 1: toot, 2: outbox
     User *APuser
     Toots *APtoots
-    Outbox *APoutbox
 }
 func NewAPobject(t int) *APobject {
-    o := &APobject{t,nil,nil,nil}
+    o := &APobject{t,nil,nil}
     return o
 }
 func (o *APobject) Strings() []string {
@@ -151,7 +150,10 @@ func (o *APtoots) Strings() []string {
 type APoutbox struct {
 }
 func parseOutbox(s string) *APoutbox {
-    return nil
+    debugJson(s)
+    a,i := getJsonVal(s, "outbox")
+    x := getAPJson(a)
+    return parseToots(x)
 }
 
 func parseAPjson(s string) *APobject {
@@ -166,6 +168,7 @@ func parseAPjson(s string) *APobject {
     i = strings.Index(s, "\"content\"")
     if i>=0 {
         // c'est un ou plusieurs toots
+        fmt.Println("page of toots detected")
         o := NewAPobject(1)
         o.Toots = parseToots(s)
         return o
@@ -173,8 +176,9 @@ func parseAPjson(s string) *APobject {
     i = strings.Index(s, "\"last\"")
     if i>=0 {
         // c'est une outbox
+        fmt.Println("outbox detected")
         o := NewAPobject(2)
-        o.Outbox = parseOutbox(s)
+        o.Toots = parseOutbox(s)
         return o
     }
     return nil
