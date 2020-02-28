@@ -20,6 +20,7 @@ func Max(x, y int) int {
 }
 
 func getAPJson(url string) string {
+    url,_ = strconv.Unquote("\""+url+"\"")
 
     req, err := http.NewRequest("GET", url, nil)
     if err != nil {
@@ -112,13 +113,14 @@ func parseUser(s string) *APuser {
 type APtoots struct {
     from []string
     txt  []string
+    nextURL string
+    prevURL string
 }
 func parseToots(s string) *APtoots {
     x := s
     var froms []string
     var txts []string
     for ;; {
-        debugJson(x)
         a,i := getJsonVal(x, "content")
         if a=="" {break}
         b,j := getJsonVal(x, "attributedTo")
@@ -137,7 +139,9 @@ func parseToots(s string) *APtoots {
         k := Max(i,j)
         x = x[k:]
     }
-    return &APtoots{froms,txts}
+    next,_ := getJsonVal(s, "next")
+    prev,_ := getJsonVal(s, "prev")
+    return &APtoots{froms,txts,next,prev}
 }
 func (o *APtoots) Strings() []string {
     var s []string
@@ -149,14 +153,13 @@ func (o *APtoots) Strings() []string {
 
 type APoutbox struct {
 }
-func parseOutbox(s string) *APoutbox {
-    debugJson(s)
-    a,i := getJsonVal(s, "outbox")
+func parseOutbox(s string, k string) *APtoots {
+    a,_ := getJsonVal(s, k)
     x := getAPJson(a)
     return parseToots(x)
 }
 
-func parseAPjson(s string) *APobject {
+func parseAPjson(s string, k string) *APobject {
     i := strings.Index(s, "\"outbox\"")
     if i>=0 {
         fmt.Println("user detected")
@@ -177,22 +180,51 @@ func parseAPjson(s string) *APobject {
     if i>=0 {
         // c'est une outbox
         fmt.Println("outbox detected")
-        o := NewAPobject(2)
-        o.Toots = parseOutbox(s)
+        o := NewAPobject(1)
+        o.Toots = parseOutbox(s,k)
         return o
     }
     return nil
 }
 
+var curObj *APobject
+
 func GetPosts(u string) []string {
     var ss []string
-
     s := getAPJson(u)
-    x := parseAPjson(s)
-    if x != nil {
-        ss = x.Strings()
+    curObj = parseAPjson(s,"first")
+    if curObj != nil {
+        ss = curObj.Strings()
     }
-
+    fmt.Printf("loaded cur page %d\n",len(ss))
     return ss
 }
+
+func GetNextPosts() []string {
+    var ss []string
+    if curObj.Toots.nextURL != "" {
+        s := getAPJson(curObj.Toots.nextURL)
+        newObj := parseAPjson(s,"next")
+        if newObj != nil {
+            curObj = newObj
+            ss = curObj.Strings()
+        }
+    }
+    fmt.Printf("loaded next page %d\n",len(ss))
+    return ss
+}
+func GetPrevPosts() []string {
+    var ss []string
+    if curObj.Toots.prevURL != "" {
+        s := getAPJson(curObj.Toots.prevURL)
+        newObj := parseAPjson(s,"prev")
+        if newObj != nil {
+            curObj = newObj
+            ss = curObj.Strings()
+        }
+    }
+    fmt.Printf("loaded prev page %d\n",len(ss))
+    return ss
+}
+
 

@@ -17,6 +17,14 @@ var days = [...]string {"Lundi","Mardi","Mercredi","Jeudi","Vendredi"}
 var curday = 0
 var tg *TextGroup
 
+/*
+   state of the display:
+   0: init
+   1: list of users
+   2: list of toots
+*/
+var isdisplayed = 0
+
 func paperchat(i int) {
   fmt.Printf("paper %d\n",i)
   /*
@@ -49,8 +57,28 @@ func menufct(bclicked int) {
     }
 
     if bclicked == -1 {
+        // click on the menu button
+        isdisplayed=1
         tg.SetTexts(users)
+    } else if bclicked == -2 {
+        // click next at the end of the list
+        if isdisplayed==2 {
+            posts := GetNextPosts()
+            if len(posts)>0 {
+                tg.SetTexts(posts)
+            }
+        }
+    } else if bclicked == -3 {
+        // click prev at the beginning of the list
+        if isdisplayed==2 {
+            posts := GetPrevPosts()
+            if len(posts)>0 {
+                tg.SetTexts(posts)
+                tg.jumpEnd = true
+            }
+        }
     } else {
+        isdisplayed=2
         posts := GetPosts(urls[bclicked])
         tg.SetTexts(posts)
     }

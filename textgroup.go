@@ -24,6 +24,7 @@ type TextGroup struct {
     curpage int
     pageidx []int
     menufct MenuFct
+    jumpEnd bool
 }
 
 type TapLab struct {
@@ -101,12 +102,18 @@ func (b *TextGroup) CreateRenderer() fyne.WidgetRenderer {
 
         bprev := widget.NewButtonWithIcon("",theme.MoveUpIcon(),func () {
             b.curpage--
-            if b.curpage<0 {b.curpage=0}
+            if b.curpage<0 {
+                b.menufct(-3)
+                b.curpage=0
+            }
             b.Refresh()
         })
         bnext := widget.NewButtonWithIcon("",theme.MoveDownIcon(),func () {
             b.curpage++
-            if b.curpage>=len(b.pageidx) {b.curpage--}
+            if b.curpage>=len(b.pageidx) {
+                b.curpage--
+                b.menufct(-2)
+            }
             b.Refresh()
         })
         bsettings := widget.NewButtonWithIcon("",theme.MenuIcon(),func () {
@@ -138,6 +145,7 @@ func NewTextGroup(txt []string, mf MenuFct) *TextGroup{
     tg.word2width = make(map[string]int)
     tg.curpage = 0
     tg.pageidx =[]int{0}
+    tg.jumpEnd = false
     return tg
 }
 
@@ -184,7 +192,13 @@ func (b *textGroupRenderer) Destroy() {
 
 func (b *textGroupRenderer) recalcText(size fyne.Size) {
     calcTxtSize(b.tg)
-    b.createLabels(b.tg,size)
+    for ;; {
+        b.createLabels(b.tg,size)
+        if !b.tg.jumpEnd {break}
+        if b.tg.curpage>=len(b.tg.pageidx)-1 {break}
+        b.tg.curpage++
+    }
+    b.tg.jumpEnd=false
 }
 
 // ==================
