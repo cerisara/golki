@@ -12,7 +12,7 @@ Fcts techniques:
 
 Naviguer dans outbox:
 
-- charger la suite de la liste à la demande
+X charger la suite de la liste à la demande
 - sauver tout ce qui est chargé dans fichier pour mode offline
 
 Ergonomie:
@@ -33,6 +33,17 @@ Le but est de rendre l'appli la plus simple possible, donc pas de registration/l
 je crée un serveur relai Writeas avec une liste de mots de passe prédéfinis, un par user,
 et je distribute les mots de passe par email.
 Ca ne scale pas pour distributer l'appli à grande échelle, mais ça suffit pour une distribution ciblée.
+
+Serveur relai:
+
+Ce serveur permet de:
+- gérer les identités plus simplement (via un mdp)
+- rassembler plus simplement (install & play) autour d'un evenement temporaire (conf...)
+- poster un message
+- centraliser les timelines & les posts au sein d'une meme outbox
+- gerer la sauvergade sous gitlab
+- gerer des fonctionalites specifiques (agenda, paper's likes...)
+- gerer les mises a jour des apps de maniere transparente
 
 BUG
 
